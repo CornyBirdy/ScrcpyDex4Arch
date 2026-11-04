@@ -1,0 +1,62 @@
+# Maintainer: ScrcpyDeX Contributors
+#
+# Local-source PKGBUILD: builds the checked-out repository (no download step).
+#   cd packaging/arch && makepkg -si
+pkgname=scrcpydex
+pkgver=2.0.0
+pkgrel=1
+pkgdesc='Open-source client for Samsung DeX on PC via USB (scrcpy based)'
+arch=('x86_64')
+url='https://github.com/CornyBirdy/ScrcpyDex4Arch'
+license=('Apache-2.0')
+depends=('android-tools' 'scrcpy' 'fontconfig' 'libx11' 'libice' 'libsm' 'mesa' 'udev')
+makedepends=('dotnet-sdk-8.0')
+optdepends=('libva-utils: inspect VA-API hardware decoding (vainfo)'
+            'intel-media-driver: VA-API on recent Intel GPUs'
+            'libva-mesa-driver: VA-API on AMD GPUs (older Mesa releases)')
+install=scrcpydex.install
+# .NET self-contained output must not be stripped.
+options=('!strip' '!debug')
+source=()
+sha256sums=()
+
+_repo="$(realpath "$startdir/../..")"
+
+build() {
+    export DOTNET_CLI_TELEMETRY_OPTOUT=1
+    export DOTNET_NOLOGO=1
+    export DOTNET_CLI_HOME="$srcdir/.dotnet"
+    export NUGET_PACKAGES="$srcdir/.nuget"
+
+    dotnet publish "$_repo/src/ScrcpyDex.App/ScrcpyDex.App.csproj" \
+        -c Release -r linux-x64 --self-contained true \
+        -p:Version="$pkgver" -o "$srcdir/out/app"
+    dotnet publish "$_repo/src/ScrcpyDex.Cli/ScrcpyDex.Cli.csproj" \
+        -c Release -r linux-x64 --self-contained true \
+        -p:Version="$pkgver" -o "$srcdir/out/cli"
+}
+
+package() {
+    install -d "$pkgdir/usr/lib/scrcpydex" "$pkgdir/usr/bin"
+    cp -r "$srcdir/out/app" "$pkgdir/usr/lib/scrcpydex/app"
+    cp -r "$srcdir/out/cli" "$pkgdir/usr/lib/scrcpydex/cli"
+    chmod 755 "$pkgdir/usr/lib/scrcpydex/app/ScrcpyDex.App" "$pkgdir/usr/lib/scrcpydex/cli/scrcpy-dex"
+
+    ln -s /usr/lib/scrcpydex/app/ScrcpyDex.App "$pkgdir/usr/bin/scrcpydex"
+    ln -s /usr/lib/scrcpydex/cli/scrcpy-dex "$pkgdir/usr/bin/scrcpydex-cli"
+
+    # Server JAR (searched at /usr/share/scrcpydex/scrcpydex-server.jar)
+    install -Dm644 "$_repo/server/scrcpydex-server.jar" \
+        "$pkgdir/usr/share/scrcpydex/server/scrcpydex-server.jar"
+    ln -s server/scrcpydex-server.jar "$pkgdir/usr/share/scrcpydex/scrcpydex-server.jar"
+
+    # Fallback shell launcher / stop scripts
+    install -Dm755 "$_repo/packaging/linux/start-dex.sh" "$pkgdir/usr/share/scrcpydex/start-dex.sh"
+    install -Dm755 "$_repo/packaging/linux/stop-dex.sh" "$pkgdir/usr/share/scrcpydex/stop-dex.sh"
+
+    install -Dm644 "$startdir/69-scrcpydex.rules" "$pkgdir/usr/lib/udev/rules.d/69-scrcpydex.rules"
+    install -Dm644 "$startdir/scrcpydex.desktop" "$pkgdir/usr/share/applications/scrcpydex.desktop"
+    install -Dm644 "$_repo/assets/app_icon.png" \
+        "$pkgdir/usr/share/icons/hicolor/256x256/apps/scrcpydex.png"
+    install -Dm644 "$_repo/LICENSE" "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+}

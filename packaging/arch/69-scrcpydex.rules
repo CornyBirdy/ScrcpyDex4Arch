@@ -1,0 +1,13 @@
+# udev rules for Samsung Galaxy devices (ADB / Samsung DeX over USB) on Arch-based systems.
+# The "uaccess" tag lets systemd-logind grant access to the active local session,
+# so no extra group (Arch has no "plugdev") is required.
+#
+# Manual install:
+#   sudo cp 69-scrcpydex.rules /etc/udev/rules.d/
+#   sudo udevadm control --reload-rules && sudo udevadm trigger
+
+# Samsung Electronics
+SUBSYSTEM=="usb", ATTR{idVendor}=="04e8", TAG+="uaccess"
+
+# Google (generic ADB)
+SUBSYSTEM=="usb", ATTR{idVendor}=="18d1", TAG+="uaccess"

@@ -3,11 +3,15 @@
 # ScrcpyDeX - Wireless DeX / Miracast sink feasibility probe (read-only)
 #
 # Checks whether this machine can act as a Wi-Fi Direct (P2P) Miracast sink.
-# It changes nothing on the system. The report is redacted (MAC/IP/SSID).
-# Output: ./miracast-probe-report.txt
+# Single entry point: installs the small diagnostic tools it needs (iw, pciutils,
+# usbutils) on pacman systems if missing, then runs the checks. It changes no
+# network settings. The report is redacted (MAC/IP/SSID).
+# Output: ./miracast-probe-report.txt   (use --no-install to skip package install)
 # ==============================================================================
 set -uo pipefail
 
+INSTALL=1
+if [ "${1:-}" = "--no-install" ]; then INSTALL=0; shift; fi
 OUT="${1:-./miracast-probe-report.txt}"
 
 redact() {
@@ -17,8 +21,27 @@ redact() {
         -e 's/(SSID|ssid)[: =]+.*/\1 <SSID>/'
 }
 
+ensure_tools() {
+    [ "$INSTALL" -eq 1 ] || return 0
+    command -v pacman >/dev/null 2>&1 || return 0
+    local missing=()
+    have iw || missing+=(iw)
+    have lspci || missing+=(pciutils)
+    have lsusb || missing+=(usbutils)
+    if [ "${#missing[@]}" -gt 0 ]; then
+        echo "Installing diagnostic tools: ${missing[*]}" >&2
+        if [ "$EUID" -eq 0 ]; then
+            pacman -S --needed --noconfirm "${missing[@]}" >&2 || true
+        else
+            sudo pacman -S --needed --noconfirm "${missing[@]}" >&2 || true
+        fi
+    fi
+}
+
 section() { printf '\n=== %s ===\n' "$1"; }
 have() { command -v "$1" >/dev/null 2>&1; }
+
+ensure_tools
 
 {
     echo "ScrcpyDeX Miracast probe - $(date -u +%Y-%m-%dT%H:%M:%SZ)"

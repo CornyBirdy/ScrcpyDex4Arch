@@ -7,9 +7,10 @@ Plain Miracast mirroring and DeX mode are different things. Mirroring a phone sc
 ## Step 1: Hardware probe
 
 ```bash
-sudo pacman -S --needed iw pciutils usbutils
 ./scripts/miracast-probe.sh
 ```
+
+The script installs `iw`, `pciutils`, and `usbutils` via `pacman` if they are missing (pass `--no-install` to skip that), then runs the checks.
 
 The script is read-only and redacts MAC addresses, IP addresses, and SSIDs. If it reports no `P2P-GO` support, a Wi-Fi Direct sink is unlikely on that adapter, and a P2P-capable USB adapter would be needed.
 

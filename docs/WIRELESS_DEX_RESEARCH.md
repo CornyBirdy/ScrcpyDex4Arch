@@ -14,15 +14,19 @@ The script installs `iw`, `pciutils`, and `usbutils` via `pacman` if they are mi
 
 The script is read-only and redacts MAC addresses, IP addresses, and SSIDs. If it reports no `P2P-GO` support, a Wi-Fi Direct sink is unlikely on that adapter, and a P2P-capable USB adapter would be needed.
 
-## Step 2: Try an open-source Miracast sink
+## Step 2: Try the receiver (one script)
 
-MiracleCast is available from the AUR (`miraclecast-git`). Its sink support is experimental and it needs `wpa_supplicant` to be controllable without NetworkManager managing the same adapter. Expect to stop NetworkManager or `iwd` for that interface while testing, which drops normal Wi-Fi on it.
+Install MiracleCast first (AUR): `yay -S miraclecast-git`. Then run:
 
-1. Start `miracled` and `miracle-wifid`.
-2. Use `miracle-sinkctl` to make the PC discoverable.
-3. On the phone, open Smart View (or the Wireless DeX tile) and look for the PC.
+```bash
+./scripts/wireless-dex-sink.sh
+```
 
-Record which of these steps works: discovery, connection, video shown.
+The script releases the Wi-Fi adapter from NetworkManager (**your Wi-Fi on that adapter drops**), starts `miracle-wifid`, sets the friendly name, and runs the sink. Press `Ctrl+C` to stop; it restores NetworkManager and reconnects Wi-Fi. Use `--dry-run` to preview the commands, `--iface <name>` to pick an interface, and `--name <text>` to change the advertised name. If automatic link detection fails, it shows the `miracle-wifictl list` output and asks for the link number. The log is `./wireless-dex-sink.log` and contains MAC/IP data: redact before sharing.
+
+On the phone, tap Wireless DeX (or Smart View) and look for `ScrcpyDeX-PC`.
+
+Record which of these works: discovery, connection, video shown, and whether the phone enters DeX or only mirrors. The script was written from the tools' `--help-commands` output and tested only with stub binaries in a dry run, so command order may need adjustment on real hardware.
 
 ## Step 3: Capture the negotiation (only if the phone connects)
 

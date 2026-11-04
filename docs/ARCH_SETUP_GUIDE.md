@@ -6,7 +6,15 @@
 
 ---
 
-## 1. Install with makepkg (recommended)
+## 1. One-step install
+
+```bash
+./install-arch.sh
+```
+
+The script installs `base-devel`, builds the package, installs it with `makepkg -si`, and runs `scrcpydex-cli doctor`. It must be run as a normal user. Like the rest of this port, it has not been run on a real Arch system.
+
+## 1b. Install manually with makepkg
 
 ```bash
 sudo pacman -S --needed base-devel git

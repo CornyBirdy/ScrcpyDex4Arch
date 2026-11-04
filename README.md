@@ -124,12 +124,13 @@ scrcpydex config path
 
 ### Linux (Arch / EndeavourOS / Manjaro)
 
+One-step install (installs dependencies, builds, installs, runs diagnostics):
+
 ```bash
-cd packaging/arch
-makepkg -si
+./install-arch.sh
 ```
 
-Then run `scrcpydex` or `scrcpydex-cli doctor`. Details, udev notes, and XFCE guidance: [**Arch Setup Guide**](docs/ARCH_SETUP_GUIDE.md). This path has not yet been validated on physical Arch hardware.
+Manual alternative: `cd packaging/arch && makepkg -si`. Then run `scrcpydex` or `scrcpydex-cli doctor`. Details, udev notes, and XFCE guidance: [**Arch Setup Guide**](docs/ARCH_SETUP_GUIDE.md). This path has not yet been validated on physical Arch hardware.
 
 ### Linux (Ubuntu / Linux Mint)
 

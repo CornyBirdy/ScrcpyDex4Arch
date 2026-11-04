@@ -31,6 +31,10 @@ fi
 echo -e "[i] Target user: ${BOLD}$TARGET_USER${NC}"
 
 # 2. Package Manager Verification
+if command -v pacman >/dev/null 2>&1 && ! command -v apt-get >/dev/null 2>&1; then
+    exec "$(dirname "${BASH_SOURCE[0]}")/setup-arch.sh"
+fi
+
 if ! command -v apt-get >/dev/null 2>&1; then
     echo -e "${YELLOW}[!] Non-APT distribution detected. Please install adb, vainfo, and scrcpy >= 2.4 using your system package manager.${NC}"
     exit 1

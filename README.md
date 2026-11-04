@@ -47,7 +47,7 @@
 
 ## 🖥️ Platform Support & Client Applications
 
-ScrcpyDeX supports both **Microsoft Windows** (10/11 x64) and **Linux** (Ubuntu 24.04 LTS noble, Linux Mint 22.3 Zena x86_64, and compatible Debian/Ubuntu derivatives). Two client interfaces are available:
+ScrcpyDeX supports both **Microsoft Windows** (10/11 x64) and **Linux** (Ubuntu 24.04 LTS noble, Linux Mint 22.3 Zena x86_64, compatible Debian/Ubuntu derivatives, and Arch-based distributions such as EndeavourOS, packaged via `packaging/arch/PKGBUILD`, not yet physically validated). Two client interfaces are available:
 
 | Client | Binary / Project | Target Platforms | Description |
 |---|---|---|---|
@@ -122,6 +122,16 @@ scrcpydex config path
 5. Click **START DEX SESSION** (`Ctrl+Enter`).
 6. To end the session and cleanly restore your phone screen, click **Stop Session** (`Ctrl+Shift+W`) or close the streaming window (`Alt+F4`).
 
+### Linux (Arch / EndeavourOS / Manjaro)
+
+One-step install (installs dependencies, builds, installs, runs diagnostics):
+
+```bash
+./install-arch.sh
+```
+
+Manual alternative: `cd packaging/arch && makepkg -si`. Then run `scrcpydex` or `scrcpydex-cli doctor`. Details, udev notes, and XFCE guidance: [**Arch Setup Guide**](docs/ARCH_SETUP_GUIDE.md). This path has not yet been validated on physical Arch hardware.
+
 ### Linux (Ubuntu / Linux Mint)
 
 1. Automated 1-step setup:
@@ -165,6 +175,7 @@ ScrcpyDex/
 │   ├── THIRD_PARTY_NOTICES.md # Third-party open source licenses and attributions
 │   └── reports/          # Architectural reports and empirical validation logs
 ├── packaging/            # Platform distribution files
+│   ├── arch/             # PKGBUILD, udev rule, and desktop entry for Arch-based distros
 │   ├── linux/            # Linux udev rules (51-android.rules), desktop entry, and scripts
 │   └── windows/          # Windows deployment assets
 ├── scripts/              # Platform setup, build, and session teardown scripts
@@ -213,6 +224,7 @@ ScrcpyDex/
 
 ## 📂 Documentation & Deep Dives
 
+* [**Arch Setup Guide:**](docs/ARCH_SETUP_GUIDE.md) PKGBUILD install, uaccess udev rule, and XFCE notes for Arch-based distros.
 * [**Linux Setup & Installation Guide:**](docs/LINUX_SETUP_GUIDE.md) Step-by-step setup instructions, udev rules, and VA-API troubleshooting for Linux users.
 * [**Troubleshooting & FAQ Catalog:**](docs/TROUBLESHOOTING_FAQ.md) Comprehensive resolutions for ADB, DeX virtual displays, VA-API/D3D11 renderers, audio jitter, and OLED burn-in prevention.
 * [**Architecture Specification:**](docs/ARCHITECTURE.md) Architectural design, session execution flow, and lifetime management.

@@ -100,7 +100,7 @@ namespace ScrcpyDex.App.Services
                     SymptomKey = "Faq_Q7_Symptom",
                     CauseKey = "Faq_Q7_Cause",
                     SolutionKey = "Faq_Q7_Solution",
-                    CommandCode = "sudo apt install va-driver-all i965-va-driver intel-media-va-driver vainfo mesa-va-drivers"
+                    CommandCode = ScrcpyDex.Core.Platform.LinuxDistro.VaapiInstallCommand
                 },
                 new FaqItem
                 {

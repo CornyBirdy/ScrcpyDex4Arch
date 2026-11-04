@@ -19,6 +19,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using ScrcpyDex.Core.IO;
+using ScrcpyDex.Core.Platform;
 
 namespace ScrcpyDex.Platform.Linux
 {
@@ -62,7 +63,10 @@ namespace ScrcpyDex.Platform.Linux
         {
             "/etc/udev/rules.d/51-android.rules",
             "/lib/udev/rules.d/51-android.rules",
-            "/usr/lib/udev/rules.d/51-android.rules"
+            "/usr/lib/udev/rules.d/51-android.rules",
+            "/etc/udev/rules.d/69-scrcpydex.rules",
+            "/usr/lib/udev/rules.d/69-scrcpydex.rules",
+            "/lib/udev/rules.d/69-scrcpydex.rules"
         };
 
         private static readonly string[] DriDriverSearchPaths =
@@ -100,10 +104,12 @@ namespace ScrcpyDex.Platform.Linux
                 {
                     Name = "Udev Rules",
                     Status = DiagnosticStatus.Warning,
-                    Summary = "Android udev rules file (51-android.rules) not found.",
+                    Summary = "Android udev rules file (51-android.rules or 69-scrcpydex.rules) not found.",
                     Details = "Without udev rules, ADB may encounter 'no permissions' when accessing USB devices.",
                     Remediation = "Install Android udev rules:\n" +
-                                  "  sudo cp packaging/linux/51-android.rules /etc/udev/rules.d/51-android.rules\n" +
+                                  (LinuxDistro.IsArchLike
+                                      ? "  sudo cp packaging/arch/69-scrcpydex.rules /etc/udev/rules.d/69-scrcpydex.rules\n"
+                                      : "  sudo cp packaging/linux/51-android.rules /etc/udev/rules.d/51-android.rules\n") +
                                   "  sudo udevadm control --reload-rules && sudo udevadm trigger"
                 };
             }
@@ -247,6 +253,21 @@ namespace ScrcpyDex.Platform.Linux
                 };
             }
 
+            if (LinuxDistro.IsArchLike)
+            {
+                // Arch ships no 'plugdev' group; systemd-logind grants access to the active
+                // local seat user through the 'uaccess' udev tag (see 69-scrcpydex.rules).
+                return new DiagnosticItem
+                {
+                    Name = "User Group Membership",
+                    Status = DiagnosticStatus.Info,
+                    Summary = $"User '{user}' is not in 'plugdev' or 'adbusers' (not required on Arch).",
+                    Details = "USB access is granted to the active local session via the 'uaccess' udev tag. " +
+                              "If adb reports 'no permissions', install the udev rule from packaging/arch/69-scrcpydex.rules " +
+                              "or add your user to 'adbusers' (provided by the android-udev package)."
+                };
+            }
+
             return new DiagnosticItem
             {
                 Name = "User Group Membership",
@@ -371,7 +392,7 @@ namespace ScrcpyDex.Platform.Linux
                 Summary = "No VA-API video acceleration drivers located in standard DRI directories.",
                 Details = "Streaming will fall back to CPU software video decoding.",
                 Remediation = "Install VA-API drivers:\n" +
-                              "  sudo apt install va-driver-all i965-va-driver intel-media-va-driver vainfo mesa-va-drivers"
+                              "  " + LinuxDistro.VaapiInstallCommand
             };
         }
 
@@ -388,7 +409,9 @@ namespace ScrcpyDex.Platform.Linux
                     Status = DiagnosticStatus.Error,
                     Summary = "scrcpy binary could not be located in system PATH or standard directories.",
                     Details = "ScrcpyDeX depends on the scrcpy streaming engine.",
-                    Remediation = "Install official scrcpy (version >= 2.4):\n" +
+                    Remediation = LinuxDistro.IsArchLike
+                        ? "Install scrcpy from the Arch repositories:\n  sudo pacman -S --needed scrcpy"
+                        : "Install official scrcpy (version >= 2.4):\n" +
                                   "  Download official release or deploy to /usr/local/bin/scrcpy."
                 };
             }
@@ -422,7 +445,9 @@ namespace ScrcpyDex.Platform.Linux
                 Status = DiagnosticStatus.Error,
                 Summary = $"scrcpy version {ver} is incompatible (required: >= 2.4.0).",
                 Details = $"Binary located at '{path}'. Upstream version < 2.4 lacks --mouse=uhid and --display-id flags.",
-                Remediation = "The default Ubuntu package (scrcpy 1.25) is incompatible.\n" +
+                Remediation = LinuxDistro.IsArchLike
+                    ? "Update scrcpy from the Arch repositories:\n  sudo pacman -S --needed scrcpy"
+                    : "The default Ubuntu package (scrcpy 1.25) is incompatible.\n" +
                               "Install official upstream scrcpy >= 2.4 or deploy official binary to /usr/local/bin/scrcpy."
             };
         }
@@ -450,7 +475,7 @@ namespace ScrcpyDex.Platform.Linux
                 Summary = "adb binary could not be resolved.",
                 Details = "Required for device enumeration and DeX server deployment.",
                 Remediation = "Install ADB:\n" +
-                              "  sudo apt install adb (or install Android platform-tools)."
+                              "  " + LinuxDistro.AdbInstallCommand + " (or install Android platform-tools)."
             };
         }
 
